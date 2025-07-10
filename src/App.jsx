@@ -1,91 +1,102 @@
-import { useState, useEffect } from 'react';
-import getLinearSortSteps from './Algo/LinearSort';
-import getBubbleSortSteps from './Algo/BubbleSort';
-import getQuickSortSteps from './Algo/QuickSort';
-
+import { useState } from 'react';
+import Sorting from './Sorting';
+import Graph from './Graph';
+import TreeCanvas from './Tree';
+import TreeLayout from './TreeLayout';
 function App() {
-  const [data, setData] = useState([]);
-  const [highlightedIndices, setHighlightedIndices] = useState([]);
+  const [DropDownSort, setDropDownSort] = useState(false);
+  const [fxname, setFxname] = useState(null);
+  const [animate, setAnimate] = useState(false);
+  const [inProcess, setInProcess] = useState(false);
+  const [mode, setMode] = useState('graph'); // 'graph' or 'sort'
 
-  useEffect(() => {
-    generateNewData();
-  }, []);
+  const SortList = [
+    { fx: "HandleBubbleSort", name: "BubbleSort" },
+    { fx: "HandleQuickSort", name: "QuickSort" },
+    { fx: "HandleLinearSort", name: "LinearSort" }
+  ];
 
-  const generateNewData = () => {
-    const rand = Array.from({ length: 50 }, () => Math.floor(Math.random() * 500));
-    setData(rand);
-    setHighlightedIndices([]);
-  };
-
-  const HandleLinearSort = async () => {
-    const steps = getLinearSortSteps(data);
-    for (let step of steps) {
-      setData(step.array);
-      setHighlightedIndices(step.highlighted);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    setHighlightedIndices([]); // clear after animation
-  };
-  const HandleBubbleSort = async () => {
-    const steps = getBubbleSortSteps(data);
-    
-    for (let step of steps) {
-      setData(step.array);
-      setHighlightedIndices(step.highlighted);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-    setHighlightedIndices([]);
-  };
-  const HandleQuickSort = async () => {
-    const steps = getQuickSortSteps(data);
-    
-    for (let step of steps) {
-      setData(step.array);
-      setHighlightedIndices(step.highlighted);
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    setHighlightedIndices([]); 
+  const handleSortSelect = (item) => {
+    setFxname(item.fx);
+    setDropDownSort(false);
   };
 
   return (
-    <div className="p-4">
-      <div className="flex items-end h-[500px] border mb-4">
-        {data.map((item, index) => (
-          <div
-            key={index}
-            className={`w-[10px] mx-[1px] ${
-              highlightedIndices.includes(index) ? 'bg-red-500' : 'bg-blue-400'
-            }`}
-            style={{ height: `${item}px` }}
-          ></div>
-        ))}
+    <div className="min-h-screen w-full bg-slate-900 text-white flex flex-col items-center font-mono">
+      {/* Navbar */}
+      <div className="w-full flex items-center justify-between p-4 bg-slate-800 shadow-md">
+        <div className="flex gap-4 items-center">
+          {/* Mode Toggle */}
+          <button
+            onClick={() => setMode('graph')}
+            className={`px-4 py-2 rounded ${mode === 'graph' ? 'bg-indigo-600' : 'bg-slate-700'} hover:bg-indigo-500`}
+          >
+            Pathfinding
+          </button>
+          <button
+            onClick={() => setMode('sort')}
+            className={`px-4 py-2 rounded ${mode === 'sort' ? 'bg-indigo-600' : 'bg-slate-700'} hover:bg-indigo-500`}
+          >
+            Sorting
+          </button>
+          <button
+            onClick={() => setMode('tree')}
+            className={`px-4 py-2 rounded ${mode === 'tree' ? 'bg-indigo-600' : 'bg-slate-700'} hover:bg-indigo-500`}
+          >
+            Tree
+          </button>
+
+          {/* Sort Dropdown */}
+          {mode === 'sort' && (
+            <div className="relative">
+              <button
+                onClick={() => setDropDownSort(!DropDownSort)}
+                className="ml-4 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded"
+              >
+                Choose Sort
+              </button>
+              {DropDownSort && (
+                <ul className="absolute mt-2 w-40 bg-white text-black rounded shadow-lg z-50">
+                  {SortList.map((item, index) => (
+                    <li
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                      onClick={() => handleSortSelect(item)}
+                    >
+                      {item.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="text-xl font-bold tracking-wide">Algo Visualizer 🚀</div>
+
+        <button
+          onClick={() => setAnimate(!animate)}
+          className={`bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded ${
+            inProcess ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+          disabled={inProcess}
+        >
+          {mode === 'graph' ? 'Start Pathfinding' : 'Generate New Data'}
+        </button>
       </div>
-      <div className="flex gap-4">
-        <button
-          onClick={generateNewData}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Generate New Data
-        </button>
-        <button
-          onClick={HandleLinearSort}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Animate Linear Sort
-        </button>
-        <button
-          onClick={HandleBubbleSort}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Animate Bubble Sort
-        </button>
-        <button
-          onClick={HandleQuickSort}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Animate Quick Sort
-        </button>
+
+      {/* Visualizer Area */}
+      <div className="w-full flex justify-center items-center p-8">
+        {mode === 'graph' && <Graph startAnimation={animate} />}
+        {mode === 'tree' && <TreeLayout/>}
+        {mode === 'sort' && (
+          <Sorting
+            fx={fxname}
+            animate={animate}
+            inProcess={inProcess}
+            setInProcess={setInProcess}
+          />
+        )}
       </div>
     </div>
   );
